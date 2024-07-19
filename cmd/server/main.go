@@ -29,6 +29,8 @@ func main() {
 	// Inisialisasi service
 	tokenService := service.NewTokenService()
 	userService := service.NewUserService(db)
+	projectService := service.NewProjectService(db)
+	taskService := service.NewTaskService(db)
 
 	// Inisialisasi handler
 	userHandler := handler.NewUserHandler(userService, tokenService)
