@@ -68,6 +68,15 @@ func main() {
 				Data: gin.H{"user_id": userId},
 			})
 		})
+
+		// Project routes
+		authorized.POST("/projects", projectHandler.CreateProject)
+		authorized.GET("/projects", projectHandler.GetProjects)
+		authorized.POST("/projects/:id/share", projectHandler.ShareProject)
+
+		// Task routes
+		authorized.POST("/projects/:projectId/tasks", taskHandler.CreateTask)
+		authorized.GET("/projects/:projectId/tasks", taskHandler.GetTasksByProject)
 	}
 
 	// Jalankan server
