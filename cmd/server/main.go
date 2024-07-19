@@ -34,6 +34,8 @@ func main() {
 
 	// Inisialisasi handler
 	userHandler := handler.NewUserHandler(userService, tokenService)
+	projectHandler := handler.NewProjectHandler(projectService)
+	taskHandler := handler.NewTaskHandler(taskService)
 
 	// Inisialisasi router Gin
 	r := gin.Default()
