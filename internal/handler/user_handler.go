@@ -11,12 +11,14 @@ import (
 )
 
 type UserHandler struct {
-	userService *service.UserService
+	userService  *service.UserService
+	tokenService *service.TokenService
 }
 
-func NewUserHandler(userService *service.UserService) *UserHandler {
+func NewUserHandler(userService *service.UserService, tokenService *service.TokenService) *UserHandler {
 	return &UserHandler{
-		userService: userService,
+		userService:  userService,
+		tokenService: tokenService,
 	}
 }
 
@@ -104,6 +106,30 @@ func (h *UserHandler) Login(c *gin.Context) {
 			"username": user.Username,
 			"email":    user.Email,
 			"token":    token,
+		},
+	})
+}
+
+func (h *UserHandler) Logout(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusBadRequest,
+				Status:  "Bad Request",
+				Message: "No token provided",
+			},
+		})
+		return
+	}
+
+	h.tokenService.BlacklistToken(token)
+
+	c.JSON(http.StatusOK, models.Response{
+		Meta: models.Meta{
+			Code:    http.StatusOK,
+			Status:  "OK",
+			Message: "Successfully logged out",
 		},
 	})
 }

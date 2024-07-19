@@ -5,13 +5,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/andrMaulana/Go-Task-Management-System/internal/models"
+	"github.com/andrMaulana/Go-Task-Management-System/internal/service"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
 var jwtKey = []byte("your_secret_key")
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(tokenService *service.TokenService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -21,6 +23,18 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		if tokenService.IsTokenBlacklisted(tokenString) {
+			c.JSON(http.StatusUnauthorized, models.Response{
+				Meta: models.Meta{
+					Code:    http.StatusUnauthorized,
+					Status:  "Unauthorized",
+					Message: "Token has been invalidated",
+				},
+			})
+			c.Abort()
+			return
+		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -43,5 +57,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		c.Next()
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/andrMaulana/Go-Task-Management-System/internal/database"
 	"github.com/andrMaulana/Go-Task-Management-System/internal/handler"
 	"github.com/andrMaulana/Go-Task-Management-System/internal/middleware"
+	"github.com/andrMaulana/Go-Task-Management-System/internal/models"
 	"github.com/andrMaulana/Go-Task-Management-System/internal/service"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -26,10 +27,11 @@ func main() {
 	}
 
 	// Inisialisasi service
-	service := service.NewUserService(db)
+	tokenService := service.NewTokenService()
+	userService := service.NewUserService(db)
 
 	// Inisialisasi handler
-	userHandler := handler.NewUserHandler(service)
+	userHandler := handler.NewUserHandler(userService, tokenService)
 
 	// Inisialisasi router Gin
 	r := gin.Default()
@@ -44,15 +46,23 @@ func main() {
 	// Definisikan rute untuk user
 	r.POST("/register", userHandler.Register)
 	r.POST("/login", userHandler.Login)
+	r.POST("/logout", middleware.AuthMiddleware(tokenService), userHandler.Logout)
 
 	// Grup rute yang memerlukan autentikasi
 	authorized := r.Group("/")
-	authorized.Use(middleware.AuthMiddleware())
+	authorized.Use(middleware.AuthMiddleware(tokenService))
 	{
 		// Tambahkan rute yang memerlukan autentikasi di sini
 		authorized.GET("/protected", func(c *gin.Context) {
 			userId := c.MustGet("user_id").(float64)
-			c.JSON(http.StatusOK, gin.H{"message": "This is a protected route", "user_id": userId})
+			c.JSON(http.StatusOK, models.Response{
+				Meta: models.Meta{
+					Code:    http.StatusOK,
+					Status:  "OK",
+					Message: "This is a protected route",
+				},
+				Data: gin.H{"user_id": userId},
+			})
 		})
 	}
 
