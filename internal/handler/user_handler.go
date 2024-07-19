@@ -23,21 +23,49 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 func (h *UserHandler) Register(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+		c.JSON(http.StatusBadRequest, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusBadRequest,
+				Status:  "Bad Request",
+				Message: "Invalid input data",
+			},
+		})
 		return
 	}
 
 	if err := validateUser(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusBadRequest,
+				Status:  "Bad Request",
+				Message: err.Error(),
+			},
+		})
 		return
 	}
 
 	if err := h.userService.Register(&user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusInternalServerError,
+				Status:  "Internal Server Error",
+				Message: "Failed to register user",
+			},
+		})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
+	c.JSON(http.StatusCreated, models.Response{
+		Meta: models.Meta{
+			Code:    http.StatusCreated,
+			Status:  "Created",
+			Message: "User registered successfully",
+		},
+		Data: gin.H{
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	})
 }
 
 func (h *UserHandler) Login(c *gin.Context) {
@@ -47,17 +75,37 @@ func (h *UserHandler) Login(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&loginData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+		c.JSON(http.StatusBadRequest, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusBadRequest,
+				Message: "Invalid input data",
+			},
+		})
 		return
 	}
 
-	token, err := h.userService.Login(loginData.Email, loginData.Password)
+	user, token, err := h.userService.Login(loginData.Email, loginData.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusUnauthorized,
+				Message: "Invalid credentials",
+			},
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	c.JSON(http.StatusOK, models.Response{
+		Meta: models.Meta{
+			Code:    http.StatusOK,
+			Message: "Login successful",
+		},
+		Data: gin.H{
+			"username": user.Username,
+			"email":    user.Email,
+			"token":    token,
+		},
+	})
 }
 
 func validateUser(user *models.User) error {

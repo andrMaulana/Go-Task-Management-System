@@ -41,14 +41,14 @@ func (s *UserService) Register(user *models.User) error {
 	return result.Error
 }
 
-func (s *UserService) Login(email, password string) (string, error) {
+func (s *UserService) Login(email, password string) (*models.User, string, error) {
 	var user models.User
 	if err := s.db.Where("email = ?", email).First(&user).Error; err != nil {
-		return "", err
+		return nil, "", err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", err
+		return nil, "", err
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -58,8 +58,8 @@ func (s *UserService) Login(email, password string) (string, error) {
 
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
-	return tokenString, nil
+	return &user, tokenString, nil
 }
