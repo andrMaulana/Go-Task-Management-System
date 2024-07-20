@@ -72,13 +72,17 @@ func main() {
 		// Project routes
 		authorized.POST("/projects", projectHandler.CreateProject)
 		authorized.GET("/projects", projectHandler.GetProjects)
-		authorized.POST("/projects/:id/share", projectHandler.ShareProject)
+		authorized.PUT("/projects/:projectId", projectHandler.UpdateProject)
+		authorized.DELETE("/projects/:projectId", projectHandler.DeleteProject)
+		authorized.POST("/projects/:projectId/share", projectHandler.ShareProject)
 
 		// Task routes
 		authorized.POST("/projects/:projectId/tasks", taskHandler.CreateTask)
 		authorized.GET("/projects/:projectId/tasks", taskHandler.GetTasksByProject)
+		authorized.PUT("/projects/:projectId/tasks/:taskId", taskHandler.UpdateTask)
+		authorized.DELETE("/projects/:projectId/tasks/:taskId", taskHandler.DeleteTask)
 	}
 
 	// Jalankan server
-	r.Run(":8080")
+	r.Run(":8081")
 }
