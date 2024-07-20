@@ -50,14 +50,24 @@ func (s *ProjectService) GetProjectByID(projectID uint) (*models.Project, error)
 }
 
 func (s *ProjectService) UpdateProject(project *models.Project) error {
-	if project.Name == "" {
-		return errors.New("project name cannot be empty")
+	var existingProject models.Project
+	if err := s.db.First(&existingProject, project.ID).Error; err != nil {
+		return err
 	}
-	return s.db.Save(project).Error
+	existingProject.Name = project.Name
+	existingProject.Description = project.Description
+	return s.db.Save(&existingProject).Error
 }
 
 func (s *ProjectService) DeleteProject(projectID uint) error {
-	return s.db.Delete(&models.Project{}, projectID).Error
+	result := s.db.Delete(&models.Project{}, projectID)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("project not found")
+	}
+	return nil
 }
 
 func (s *ProjectService) ShareProject(projectID, userID uint) error {
