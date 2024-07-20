@@ -22,7 +22,7 @@ func (s *ProjectService) CreateProject(project *models.Project) error {
 	return s.db.Create(project).Error
 }
 
-func (s *ProjectService) GetProjects(userID uint, page, pageSize int) ([]models.Project, int64, error) {
+func (s *ProjectService) GetProjects(userID float64, page, pageSize int) ([]models.Project, int64, error) {
 	var projects []models.Project
 	var total int64
 

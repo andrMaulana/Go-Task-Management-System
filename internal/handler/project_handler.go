@@ -30,8 +30,8 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	project.OwnerID = userID.(uint)
+	userIDFloat := c.MustGet("user_id").(float64)
+	project.OwnerID = uint(userIDFloat)
 
 	if err := h.projectService.CreateProject(&project); err != nil {
 		c.JSON(http.StatusInternalServerError, models.Response{
@@ -55,11 +55,11 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 }
 
 func (h *ProjectHandler) GetProjects(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID := c.MustGet("user_id")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
 
-	projects, total, err := h.projectService.GetProjects(userID.(uint), page, pageSize)
+	projects, total, err := h.projectService.GetProjects(userID.(float64), page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.Response{
 			Meta: models.Meta{
@@ -87,7 +87,7 @@ func (h *ProjectHandler) GetProjects(c *gin.Context) {
 }
 
 func (h *ProjectHandler) ShareProject(c *gin.Context) {
-	projectID, _ := strconv.Atoi(c.Param("id"))
+	projectID, _ := strconv.Atoi(c.Param("projectId"))
 	var shareData struct {
 		UserID uint `json:"user_id" binding:"required"`
 	}
