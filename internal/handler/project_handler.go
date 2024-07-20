@@ -86,6 +86,76 @@ func (h *ProjectHandler) GetProjects(c *gin.Context) {
 	})
 }
 
+func (h *ProjectHandler) UpdateProject(c *gin.Context) {
+	var project models.Project
+	if err := c.ShouldBindJSON(&project); err != nil {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusBadRequest,
+				Status:  "Bad Request",
+				Message: "Invalid input data",
+			},
+		})
+		return
+	}
+
+	projectID, _ := strconv.Atoi(c.Param("projectId"))
+	project.ID = uint(projectID)
+
+	if err := h.projectService.UpdateProject(&project); err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusInternalServerError,
+				Status:  "Internal Server Error",
+				Message: "Failed to update project",
+			},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Response{
+		Meta: models.Meta{
+			Code:    http.StatusOK,
+			Status:  "OK",
+			Message: "Project updated successfully",
+		},
+		Data: project,
+	})
+}
+
+func (h *ProjectHandler) DeleteProject(c *gin.Context) {
+	projectID, _ := strconv.Atoi(c.Param("projectId"))
+
+	if err := h.projectService.DeleteProject(uint(projectID)); err != nil {
+		if err.Error() == "project not found" {
+			c.JSON(http.StatusNotFound, models.Response{
+				Meta: models.Meta{
+					Code:    http.StatusNotFound,
+					Status:  "Not Found",
+					Message: "Project not found",
+				},
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, models.Response{
+				Meta: models.Meta{
+					Code:    http.StatusInternalServerError,
+					Status:  "Internal Server Error",
+					Message: "Failed to delete project",
+				},
+			})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Response{
+		Meta: models.Meta{
+			Code:    http.StatusOK,
+			Status:  "OK",
+			Message: "Project deleted successfully",
+		},
+	})
+}
+
 func (h *ProjectHandler) ShareProject(c *gin.Context) {
 	projectID, _ := strconv.Atoi(c.Param("projectId"))
 	var shareData struct {
