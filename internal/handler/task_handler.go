@@ -85,3 +85,63 @@ func (h *TaskHandler) GetTasksByProject(c *gin.Context) {
 		},
 	})
 }
+
+func (h *TaskHandler) UpdateTask(c *gin.Context) {
+	var task models.Task
+	if err := c.ShouldBindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusBadRequest,
+				Status:  "Bad Request",
+				Message: "Invalid input data",
+			},
+		})
+		return
+	}
+
+	taskID, _ := strconv.Atoi(c.Param("taskId"))
+	task.ID = uint(taskID)
+
+	if err := h.taskService.UpdateTask(&task); err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusInternalServerError,
+				Status:  "Internal Server Error",
+				Message: "Failed to update task",
+			},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Response{
+		Meta: models.Meta{
+			Code:    http.StatusOK,
+			Status:  "OK",
+			Message: "Task updated successfully",
+		},
+		Data: task,
+	})
+}
+
+func (h *TaskHandler) DeleteTask(c *gin.Context) {
+	taskID, _ := strconv.Atoi(c.Param("taskId"))
+
+	if err := h.taskService.DeleteTask(uint(taskID)); err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Meta: models.Meta{
+				Code:    http.StatusInternalServerError,
+				Status:  "Internal Server Error",
+				Message: "Failed to delete task",
+			},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Response{
+		Meta: models.Meta{
+			Code:    http.StatusOK,
+			Status:  "OK",
+			Message: "Task deleted successfully",
+		},
+	})
+}
